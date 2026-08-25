@@ -8,6 +8,8 @@ A premium, awwwards-style landing page for **ARBOR**, a fictional Geneva skeleto
 
 **Live:** https://anatolilavra-droid.github.io/arbor/
 
+![ARBOR hero section](docs/preview.png)
+
 ## Concept
 
 Scrolling drives a single WebGL camera move straight through the physical layers of a watch — crystal, dial, hands, movement, caseback — instead of scrolling past flat sections. Each depth stop syncs a Three.js layer (an animated gear train with hand-built extruded gear geometry, a balance wheel, hour markers) to a content panel that crossfades in as the camera arrives. A live seconds hand on the collection dials ticks against the real clock.
@@ -22,7 +24,7 @@ Scrolling drives a single WebGL camera move straight through the physical layers
 
 ## Stack
 
-Plain HTML/CSS + Three.js (via import map, unpkg) + GSAP/ScrollTrigger (via CDN). Fonts load from Google Fonts (Instrument Serif, Instrument Sans, Fragment Mono).
+Plain HTML/CSS + Three.js (vendored, via import map) + GSAP/ScrollTrigger (vendored). No CDN dependency — `vendor/` ships the exact library builds the page needs, so it works offline and isn't affected by a CDN outage. Fonts load from Google Fonts (Instrument Serif, Instrument Sans, Fragment Mono).
 
 ## Run locally
 
