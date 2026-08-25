@@ -8,6 +8,8 @@ A premium, awwwards-style landing page for **ARBOR**, a fictional Geneva skeleto
 
 **Live:** https://anatolilavra-droid.github.io/Arbor/
 
+Part of my [portfolio](https://anatolilavra-droid.github.io/Portfolio/).
+
 ![ARBOR hero section](docs/preview.png)
 
 ## Concept
