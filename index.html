@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ARBOR — Manufacture d'Horlogerie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=Fragment+Mono&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --void:#0B0D10;
+    --steel:#1C2126;
+    --brass:#C89B5C;
+    --brass-dim:#8f7143;
+    --ivory:#EDE8DE;
+    --ivory-dim:#8a877e;
+    --rust:#A8402F;
+    --hairline:#3A4048;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{background:var(--void);}
+  body{
+    background:var(--void);
+    color:var(--ivory);
+    font-family:'Instrument Sans',sans-serif;
+    font-weight:300;
+    overflow-x:hidden;
+    cursor:default;
+  }
+  ::selection{background:var(--brass);color:var(--void);}
+  a{color:inherit;text-decoration:none;}
+  :focus-visible{outline:1px solid var(--brass);outline-offset:4px;}
+
+  .eyebrow{
+    font-family:'Fragment Mono',monospace;
+    font-size:clamp(0.65rem,1vw,0.75rem);
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--brass);
+  }
+  h1,h2,h3{
+    font-family:'Instrument Serif',serif;
+    font-weight:400;
+    line-height:1.02;
+    letter-spacing:-0.01em;
+  }
+  .display-xl{font-size:clamp(2.6rem,8vw,7rem);font-style:italic;}
+  .display-l{font-size:clamp(2rem,5vw,3.8rem);}
+  p{
+    font-weight:300;
+    line-height:1.65;
+    color:var(--ivory-dim);
+    font-size:clamp(0.9rem,1.05vw,1rem);
+  }
+  .mono{font-family:'Fragment Mono',monospace;}
+
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:30;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:clamp(1.1rem,3vw,1.7rem) clamp(1.5rem,4vw,3.5rem);
+    background:linear-gradient(to bottom, rgba(11,13,16,0.9) 0%, rgba(11,13,16,0.5) 65%, transparent 100%);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .logo{font-family:'Instrument Serif',serif;font-size:1.1rem;letter-spacing:0.18em;}
+  .nav-links{display:flex;gap:clamp(1.2rem,2.5vw,2.2rem);font-family:'Fragment Mono',monospace;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;}
+  .nav-links button{
+    background:none;border:none;color:var(--ivory-dim);cursor:pointer;
+    font-family:inherit;font-size:inherit;letter-spacing:inherit;text-transform:inherit;
+    position:relative;padding:0.4rem 0;transition:color .3s ease;
+  }
+  .nav-links button::after{
+    content:'';position:absolute;left:0;bottom:0;width:0;height:1px;background:var(--brass);
+    transition:width .4s cubic-bezier(.16,1,.3,1);
+  }
+  .nav-links button:hover{color:var(--ivory);}
+  .nav-links button:hover::after{width:100%;}
+  .nav-links button.is-active{color:var(--ivory);}
+  .nav-links button.is-active::after{width:100%;}
+
+  #progress-bar{
+    position:fixed;top:0;left:0;height:2px;background:var(--brass);
+    z-index:35;width:0%;
+    box-shadow:0 0 8px rgba(200,155,92,0.6);
+  }
+  #stop-dots{
+    position:fixed;right:clamp(1.2rem,3vw,2.2rem);top:50%;
+    transform:translateY(-50%);
+    z-index:30;
+    display:flex;flex-direction:column;gap:1.1rem;
+  }
+  .stop-dot{
+    width:7px;height:7px;border-radius:50%;
+    border:1px solid var(--hairline);
+    background:transparent;
+    cursor:pointer;
+    padding:0;
+    transition:background .3s ease, border-color .3s ease, transform .3s ease;
+  }
+  .stop-dot.is-active{background:var(--brass);border-color:var(--brass);transform:scale(1.3);}
+  @media (max-width:767px){#stop-dots{display:none;}}
+
+  #scene-track{
+    position:relative;
+    height:560vh;
+  }
+  #stage{
+    position:sticky;
+    top:0;
+    height:100vh;
+    height:100svh;
+    overflow:hidden;
+  }
+  .panel{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:clamp(6rem,12vh,7.5rem) clamp(1.5rem,4vw,3.5rem) clamp(2.5rem,6vh,3.5rem);
+    opacity:0;
+    pointer-events:none;
+    will-change:opacity;
+  }
+  .panel.is-interactive{pointer-events:auto;}
+
+  #panel-hero .hero-sub{max-width:34ch;margin-top:1rem;}
+  .hero-cta{display:flex;align-items:center;gap:clamp(1.1rem,3vw,1.8rem);margin-top:clamp(1.5rem,3vh,2rem);flex-wrap:wrap;}
+  .cta-magnetic{
+    display:inline-flex;align-items:center;gap:0.7rem;
+    padding:1.05rem 2.2rem;border:1px solid var(--brass-dim);border-radius:999px;
+    font-family:'Fragment Mono',monospace;font-size:0.72rem;letter-spacing:0.13em;text-transform:uppercase;
+    transition:background .4s ease, color .4s ease, border-color .4s ease;
+  }
+  .cta-magnetic:hover{background:var(--brass);color:var(--void);border-color:var(--brass);}
+  .cta-ghost{
+    font-family:'Fragment Mono',monospace;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--ivory-dim);border-bottom:1px solid var(--hairline);padding-bottom:2px;
+    transition:color .35s ease, border-color .35s ease;
+  }
+  .cta-ghost:hover{color:var(--ivory);border-color:var(--brass);}
+  .hero-stats{display:flex;gap:clamp(1.8rem,4vw,3rem);margin-top:clamp(2rem,4vh,2.6rem);}
+  .stat{display:flex;flex-direction:column;gap:0.3rem;}
+  .stat-num{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(1.4rem,2.6vw,1.9rem);color:var(--brass);text-shadow:0 0 24px rgba(200,155,92,0.35);}
+  .stat-label{font-family:'Fragment Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ivory-dim);}
+  .depth-cue{
+    position:absolute;bottom:clamp(1.5rem,4vh,2.5rem);left:clamp(1.5rem,4vw,3.5rem);
+    display:flex;align-items:center;gap:0.8rem;font-family:'Fragment Mono',monospace;
+    font-size:0.66rem;letter-spacing:0.14em;color:var(--ivory-dim);text-transform:uppercase;
+  }
+  .depth-line{width:1px;height:30px;background:linear-gradient(var(--brass), transparent);animation:cuepulse 2.2s ease-in-out infinite;}
+  @keyframes cuepulse{0%,100%{opacity:0.3;}50%{opacity:1;}}
+
+  #panel-manifesto{align-items:center;text-align:center;}
+  .manifesto-inner{max-width:780px;}
+  .manifesto-inner p{
+    font-size:clamp(1.1rem,2.2vw,1.6rem);font-family:'Instrument Serif',serif;font-style:italic;
+    color:var(--ivory);line-height:1.5;
+  }
+  .manifesto-inner p em{color:var(--brass);font-style:italic;}
+
+  #panel-collection .coll-head{max-width:520px;margin-bottom:clamp(1.6rem,4vh,2.4rem);}
+  .coll-stage{position:relative;min-height:clamp(220px,32vh,300px);}
+  .coll-item{
+    position:absolute;inset:0;
+    display:flex;align-items:center;gap:clamp(1.5rem,4vw,3rem);
+    opacity:0;transform:translateY(14px);
+    transition:opacity .5s ease, transform .5s ease;
+    pointer-events:none;
+  }
+  .coll-item.is-active{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .coll-dial{
+    flex:0 0 auto;width:clamp(110px,16vw,150px);aspect-ratio:1;border-radius:50%;
+    border:1px solid var(--hairline);position:relative;display:flex;align-items:center;justify-content:center;
+  }
+  .coll-dial::before{content:'';position:absolute;inset:14%;border-radius:50%;border:1px solid var(--hairline);}
+  .coll-dial .hand{position:absolute;bottom:50%;left:50%;width:1px;background:var(--brass);transform-origin:bottom center;}
+  .coll-name{font-family:'Instrument Serif',serif;font-size:clamp(1.4rem,3vw,2rem);}
+  .coll-meta{font-family:'Fragment Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;color:var(--ivory-dim);display:flex;gap:1.2rem;margin:0.5rem 0 0.7rem;}
+  .coll-desc{max-width:44ch;font-size:0.85rem;}
+  .coll-progress{display:flex;gap:0.6rem;margin-top:clamp(1.6rem,4vh,2.2rem);}
+  .coll-progress span{width:26px;height:1px;background:var(--hairline);transition:background .3s ease;}
+  .coll-progress span.is-active{background:var(--brass);}
+
+  #panel-craft .craft-grid{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.5rem,3vw,3rem);margin-top:clamp(1.6rem,3vh,2.2rem);}
+  @media (max-width:700px){#panel-craft .craft-grid{grid-template-columns:1fr;}}
+  .spec-row{display:flex;justify-content:space-between;padding:0.65rem 0;border-bottom:1px solid var(--hairline);font-size:0.85rem;}
+  .spec-row .label{color:var(--ivory-dim);font-family:'Fragment Mono',monospace;font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;}
+  .spec-row .value{font-family:'Instrument Serif',serif;font-size:0.95rem;}
+
+  #panel-atelier{align-items:center;text-align:center;gap:1.4rem;}
+  #panel-atelier .display-l{max-width:16ch;}
+  #panel-atelier p{max-width:38ch;}
+
+  #preloader{position:fixed;inset:0;z-index:100;background:var(--void);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;}
+  .preloader-mark{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(2rem,6vw,3.2rem);opacity:0.92;}
+  .preloader-bar{width:min(220px, 40vw);height:1px;background:var(--hairline);position:relative;overflow:hidden;}
+  .preloader-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--brass);}
+  .preloader-pct{font-size:0.68rem;letter-spacing:0.2em;color:var(--ivory-dim);}
+
+  #cursor-dot,#cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:60;border-radius:50%;transform:translate(-50%,-50%);will-change:transform;}
+  #cursor-dot{width:5px;height:5px;background:var(--brass);}
+  #cursor-ring{width:34px;height:34px;border:1px solid var(--brass-dim);transition:width .3s ease,height .3s ease,border-color .3s ease;}
+  #cursor-ring.is-active{width:56px;height:56px;border-color:var(--brass);}
+  @media (hover:none),(pointer:coarse){#cursor-dot,#cursor-ring{display:none;}}
+
+  #grain{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .hand-sec{background:var(--rust) !important;}
+  #hero-title .char{display:inline-block;will-change:transform,opacity;}
+
+  #webgl{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;}
+
+  footer{
+    position:relative;z-index:2;background:var(--void);
+    padding:2.5rem clamp(1.5rem,4vw,3.5rem) 3rem;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;
+    font-family:'Fragment Mono',monospace;font-size:0.66rem;color:var(--ivory-dim);
+    letter-spacing:0.06em;border-top:1px solid var(--hairline);
+  }
+
+  @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important;}}
+
+  @media (max-width:1023px){
+    #panel-collection .coll-item{flex-direction:column;text-align:center;gap:1.2rem;}
+    .coll-progress{justify-content:center;}
+  }
+  @media (max-width:767px){
+    nav{padding:1.1rem 1.25rem;}
+    .nav-links{gap:1rem;}
+    .hero-cta{width:100%;}
+    .hero-cta .cta-magnetic{width:100%;justify-content:center;min-height:48px;}
+    .hero-stats{gap:1.4rem;flex-wrap:wrap;}
+    footer{flex-direction:column;text-align:center;}
+  }
+  @media (max-width:479px){
+    .display-xl{font-size:clamp(2.2rem,10vw,2.8rem);}
+    .stat-num{font-size:1.3rem;}
+  }
+  @media (hover:none) and (pointer:coarse){.cta-magnetic{transition:none;}}
+</style>
+</head>
+<body>
+
+<div id="preloader">
+  <div class="preloader-mark">ARBOR</div>
+  <div class="preloader-bar"><div class="preloader-fill"></div></div>
+  <div class="preloader-pct mono">00</div>
+</div>
+
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+<div id="grain"></div>
+<div id="progress-bar"></div>
+
+<nav>
+  <div class="logo">ARBOR</div>
+  <div class="nav-links">
+    <button data-goto="1">Collection</button>
+    <button data-goto="3">Calibre</button>
+    <button data-goto="4">Atelier</button>
+  </div>
+</nav>
+
+<div id="stop-dots">
+  <button class="stop-dot" data-goto="0" aria-label="Crystal"></button>
+  <button class="stop-dot" data-goto="1" aria-label="Dial"></button>
+  <button class="stop-dot" data-goto="2" aria-label="Hands"></button>
+  <button class="stop-dot" data-goto="3" aria-label="Movement"></button>
+  <button class="stop-dot" data-goto="4" aria-label="Caseback"></button>
+</div>
+
+<div id="scene-track">
+  <div id="stage">
+    <canvas id="webgl"></canvas>
+
+    <div class="panel" id="panel-hero" data-stop="0">
+      <span class="eyebrow">Manufacture d'Horlogerie — Genève, est. 2014</span>
+      <h1 class="display-xl" id="hero-title">Every second,<br>engineered.</h1>
+      <p class="hero-sub">ARBOR builds skeletonised mechanical watches that hide nothing. The movement is not concealed beneath the dial — it <em style="color:var(--brass);font-style:italic;">is</em> the dial.</p>
+      <div class="hero-cta">
+        <a href="#" class="cta-magnetic" data-goto="2">View the collection →</a>
+        <a href="#" class="cta-ghost" data-goto="3">The calibre inside</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">128</span><span class="stat-label">Components</span></div>
+        <div class="stat"><span class="stat-num">72h</span><span class="stat-label">Power reserve</span></div>
+        <div class="stat"><span class="stat-num">01</span><span class="stat-label">Atelier, Genève</span></div>
+      </div>
+      <div class="depth-cue"><span class="depth-line"></span>Scroll to descend into the calibre</div>
+    </div>
+
+    <div class="panel" id="panel-manifesto" data-stop="1">
+      <div class="manifesto-inner">
+        <p>A watch has one hundred and thirty parts, and most makers spend their craft <em>hiding</em> a hundred and twenty of them. We spend ours <em>polishing</em> all of them — because a mechanism built with nothing to hide is a mechanism built with nothing to fear.</p>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-collection" data-stop="2">
+      <div class="coll-head">
+        <span class="eyebrow">The Collection</span>
+        <h2 class="display-l" style="margin-top:0.5rem;">Three calibres.<br>One philosophy.</h2>
+      </div>
+      <div class="coll-stage">
+        <div class="coll-item is-active" data-idx="0">
+          <div class="coll-dial"><div class="hand hand-sec"></div><div class="hand" style="height:26%;width:1.4px;transform:rotate(160deg);"></div></div>
+          <div>
+            <div class="coll-name">ARBOR One</div>
+            <div class="coll-meta"><span>SKELETON CHRONOGRAPH</span><span>41MM</span></div>
+            <p class="coll-desc">The founding calibre. Column-wheel chronograph, fully openworked bridge structure, hand-bevelled by a single artisan.</p>
+          </div>
+        </div>
+        <div class="coll-item" data-idx="1">
+          <div class="coll-dial"><div class="hand hand-sec"></div><div class="hand" style="height:24%;width:1.4px;transform:rotate(250deg);"></div></div>
+          <div>
+            <div class="coll-name">ARBOR Ligne</div>
+            <div class="coll-meta"><span>ULTRA-THIN DRESS</span><span>38MM</span></div>
+            <p class="coll-desc">3.4mm of case height around a micro-rotor movement — thin enough to disappear beneath a cuff, honest enough not to.</p>
+          </div>
+        </div>
+        <div class="coll-item" data-idx="2">
+          <div class="coll-dial"><div class="hand hand-sec"></div><div class="hand" style="height:28%;width:1.4px;transform:rotate(60deg);"></div></div>
+          <div>
+            <div class="coll-name">ARBOR Marine</div>
+            <div class="coll-meta"><span>SKELETON DIVER</span><span>43MM</span></div>
+            <p class="coll-desc">300m rated, sapphire caseback and sapphire dial alike — the only thing keeping the sea out is glass.</p>
+          </div>
+        </div>
+      </div>
+      <div class="coll-progress">
+        <span class="is-active" data-p="0"></span><span data-p="1"></span><span data-p="2"></span>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-craft" data-stop="3">
+      <span class="eyebrow">Calibre A-14</span>
+      <h2 class="display-l" style="margin-top:0.5rem;">Inside the<br>mechanism.</h2>
+      <div class="craft-grid">
+        <div>
+          <div class="spec-row"><span class="label">Movement</span><span class="value">In-house, hand-wound</span></div>
+          <div class="spec-row"><span class="label">Components</span><span class="value">128 parts</span></div>
+          <div class="spec-row"><span class="label">Power reserve</span><span class="value">72 hours</span></div>
+          <div class="spec-row"><span class="label">Escapement</span><span class="value">Swiss lever, free-sprung</span></div>
+        </div>
+        <div>
+          <div class="spec-row"><span class="label">Frequency</span><span class="value">4Hz / 28,800 vph</span></div>
+          <div class="spec-row"><span class="label">Bridges</span><span class="value">Openworked, hand-bevelled</span></div>
+          <div class="spec-row"><span class="label">Case</span><span class="value">Grade 5 titanium</span></div>
+          <div class="spec-row"><span class="label">Water resistance</span><span class="value">50m — 300m by model</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-atelier" data-stop="4">
+      <span class="eyebrow">Private Viewing</span>
+      <h2 class="display-l">Hold the mechanism<br>in your hand.</h2>
+      <p>Appointments at our Genève atelier, or a calibre sent to you — either way, you meet the movement before you meet the price.</p>
+      <a href="#" class="cta-magnetic">Request an appointment →</a>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <span>ARBOR MANUFACTURE D'HORLOGERIE</span>
+  <span>RUE DU RHÔNE, GENÈVE</span>
+  <span>© 2026</span>
+</footer>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+      var pl = document.getElementById('preloader');
+      if (pl && pl.style.display !== 'none') {
+        pl.style.display = 'none';
+        document.body.classList.add('fallback-visible');
+      }
+      if (!window.__arborReady) {
+        var badge = document.createElement('div');
+        badge.textContent = 'Lightweight mode — reconnect to see the full scene';
+        badge.style.cssText = 'position:fixed;left:1.25rem;bottom:1.25rem;z-index:90;font-family:monospace;font-size:11px;letter-spacing:0.04em;color:#8a877e;background:rgba(28,33,38,0.9);padding:0.5rem 0.9rem;border:1px solid #3a4048;border-radius:999px;';
+        document.body.appendChild(badge);
+        var firstPanel = document.getElementById('panel-hero');
+        if (firstPanel) { firstPanel.style.opacity = 1; firstPanel.classList.add('is-interactive'); }
+      }
+    }, 3500);
+  });
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.164.0/build/three.module.js"
+  }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* =========================================================
+   ARBOR — Zoom-through calibre
+   The camera travels along a single depth axis through the
+   physical layers of a watch: crystal -> dial -> hands ->
+   movement -> caseback. Each layer corresponds to a content
+   panel that fades in as the camera arrives at its depth.
+   ========================================================= */
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
+const canvas = document.getElementById('webgl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 0);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.3;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0b0d10, 0.05);
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0, 4);
+
+/* ---------- lighting ---------- */
+scene.add(new THREE.AmbientLight(0x30302c, 1.1));
+const key = new THREE.DirectionalLight(0xffdca8, 2.1);
+key.position.set(5, 6, 8);
+scene.add(key);
+const rim = new THREE.PointLight(0xc89b5c, 3, 40);
+rim.position.set(-6, -2, -6);
+scene.add(rim);
+const fill = new THREE.PointLight(0x3a4048, 1.4, 40);
+fill.position.set(0, -4, 2);
+scene.add(fill);
+
+/* =========================================================
+   DEPTH ANCHORS — five stops the camera glides between.
+   These map 1:1 to the five .panel elements in the DOM.
+   ========================================================= */
+const STOPS = [
+  { z: 4.0,  label: 'crystal'   }, // hero
+  { z: -0.5, label: 'dial'      }, // manifesto
+  { z: -5.0, label: 'hands'     }, // collection
+  { z: -9.5, label: 'movement'  }, // craft
+  { z: -14.0, label: 'caseback' }, // atelier
+];
+
+// fraction of total scroll each stop's panel "owns" (must sum to 1)
+const WEIGHTS = [0.16, 0.14, 0.28, 0.24, 0.18];
+const RANGES = []; // [start, end] per stop, cumulative
+(() => {
+  let acc = 0;
+  WEIGHTS.forEach((w) => {
+    RANGES.push([acc, acc + w]);
+    acc += w;
+  });
+})();
+
+/* ---------- gear geometry factory (movement layer) ---------- */
+function gearShape(teeth, innerR, outerR, holeR) {
+  const shape = new THREE.Shape();
+  const step = (Math.PI * 2) / teeth;
+  for (let i = 0; i < teeth; i++) {
+    const a0 = i * step;
+    const a1 = a0 + step * 0.32;
+    const a2 = a0 + step * 0.5;
+    const a3 = a0 + step * 0.82;
+    const pts = [
+      [innerR * Math.cos(a0), innerR * Math.sin(a0)],
+      [outerR * Math.cos(a1), outerR * Math.sin(a1)],
+      [outerR * Math.cos(a2), outerR * Math.sin(a2)],
+      [innerR * Math.cos(a3), innerR * Math.sin(a3)],
+    ];
+    pts.forEach((p, idx) => {
+      if (i === 0 && idx === 0) shape.moveTo(p[0], p[1]);
+      else shape.lineTo(p[0], p[1]);
+    });
+  }
+  shape.closePath();
+  const hole = new THREE.Path();
+  hole.absarc(0, 0, holeR, 0, Math.PI * 2, true);
+  shape.holes.push(hole);
+  return shape;
+}
+
+function makeGear({ teeth, innerR, outerR, holeR, thickness, color, metalness, roughness }) {
+  const shape = gearShape(teeth, innerR, outerR, holeR);
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: thickness,
+    bevelEnabled: true,
+    bevelThickness: 0.02,
+    bevelSize: 0.02,
+    bevelSegments: 4,
+    curveSegments: 16,
+  });
+  geo.center();
+  const mat = new THREE.MeshPhysicalMaterial({ color, metalness, roughness, clearcoat: 0.55, clearcoatRoughness: 0.25, reflectivity: 0.9 });
+  return new THREE.Mesh(geo, mat);
+}
+
+function makeBalanceWheel(radius, thickness, color) {
+  const group = new THREE.Group();
+  const physMat = () => new THREE.MeshPhysicalMaterial({ color, metalness: 0.85, roughness: 0.22, clearcoat: 0.5, clearcoatRoughness: 0.3 });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, radius * 0.045, 12, 64), physMat());
+  group.add(ring);
+  const spokeGeo = new THREE.BoxGeometry(radius * 1.9, radius * 0.05, thickness * 0.6);
+  for (let i = 0; i < 3; i++) {
+    const spoke = new THREE.Mesh(spokeGeo, physMat());
+    spoke.rotation.z = (i * Math.PI) / 3;
+    group.add(spoke);
+  }
+  return group;
+}
+
+const brass = 0xc89b5c;
+const steel = 0x9aa0a6;
+const dark = 0x4a4e52;
+
+/* =========================================================
+   LAYER 0 — CRYSTAL (hero). A faint glass disc.
+   ========================================================= */
+const crystalGroup = new THREE.Group();
+crystalGroup.position.z = STOPS[0].z - 1.5;
+const crystalMat = new THREE.MeshPhysicalMaterial({
+  color: 0xffffff,
+  transmission: 1,
+  thickness: 0.3,
+  roughness: 0.05,
+  metalness: 0,
+  transparent: true,
+  opacity: 0.18,
+});
+const crystal = new THREE.Mesh(new THREE.CircleGeometry(2.6, 64), crystalMat);
+crystalGroup.add(crystal);
+scene.add(crystalGroup);
+
+/* =========================================================
+   LAYER 1 — DIAL (manifesto). Dark disc + hour markers.
+   ========================================================= */
+const dialGroup = new THREE.Group();
+dialGroup.position.z = STOPS[1].z;
+const dialFace = new THREE.Mesh(
+  new THREE.CircleGeometry(2.9, 64),
+  new THREE.MeshPhysicalMaterial({ color: 0x14171b, metalness: 0.3, roughness: 0.6, clearcoat: 0.3 })
+);
+dialGroup.add(dialFace);
+for (let i = 0; i < 12; i++) {
+  const angle = (i / 12) * Math.PI * 2;
+  const marker = new THREE.Mesh(
+    new THREE.BoxGeometry(0.05, 0.32, 0.05),
+    new THREE.MeshPhysicalMaterial({ color: brass, metalness: 0.85, roughness: 0.25, clearcoat: 0.5 })
+  );
+  marker.position.set(Math.cos(angle) * 2.4, Math.sin(angle) * 2.4, 0.1);
+  marker.rotation.z = angle - Math.PI / 2;
+  dialGroup.add(marker);
+}
+scene.add(dialGroup);
+
+/* =========================================================
+   LAYER 2 — HANDS (collection). Large sweeping hour/minute
+   hands, ambient life behind the product copy.
+   ========================================================= */
+const handsGroup = new THREE.Group();
+handsGroup.position.z = STOPS[2].z;
+const hourHand = new THREE.Mesh(
+  new THREE.BoxGeometry(0.12, 1.5, 0.06),
+  new THREE.MeshPhysicalMaterial({ color: brass, metalness: 0.9, roughness: 0.2, clearcoat: 0.6 })
+);
+hourHand.geometry.translate(0, 0.75, 0);
+const minuteHand = new THREE.Mesh(
+  new THREE.BoxGeometry(0.08, 2.1, 0.06),
+  new THREE.MeshPhysicalMaterial({ color: steel, metalness: 0.85, roughness: 0.25, clearcoat: 0.5 })
+);
+minuteHand.geometry.translate(0, 1.05, 0);
+handsGroup.add(hourHand, minuteHand);
+scene.add(handsGroup);
+
+/* =========================================================
+   LAYER 3 — MOVEMENT (craft). The gear train, assembled.
+   ========================================================= */
+const movementGroup = new THREE.Group();
+movementGroup.position.z = STOPS[3].z;
+scene.add(movementGroup);
+
+const arbors = [];
+function addArbor(mesh, pos, spinSpeed) {
+  mesh.position.copy(pos);
+  movementGroup.add(mesh);
+  arbors.push({ mesh, spinSpeed });
+}
+addArbor(makeGear({ teeth: 14, innerR: 0.78, outerR: 0.95, holeR: 0.18, thickness: 0.14, color: brass, metalness: 0.9, roughness: 0.25 }), new THREE.Vector3(-0.55, 0.35, 0.1), 0.35);
+addArbor(makeGear({ teeth: 10, innerR: 0.42, outerR: 0.56, holeR: 0.1, thickness: 0.12, color: steel, metalness: 0.85, roughness: 0.3 }), new THREE.Vector3(0.5, -0.3, 0.3), -0.55);
+addArbor(makeGear({ teeth: 20, innerR: 1.15, outerR: 1.38, holeR: 0.24, thickness: 0.1, color: dark, metalness: 0.8, roughness: 0.35 }), new THREE.Vector3(0.05, 0.05, -0.4), 0.18);
+addArbor(makeGear({ teeth: 8, innerR: 0.28, outerR: 0.4, holeR: 0.07, thickness: 0.1, color: brass, metalness: 0.9, roughness: 0.22 }), new THREE.Vector3(-0.3, -0.55, 0.5), -0.9);
+addArbor(makeBalanceWheel(0.7, 0.12, brass), new THREE.Vector3(0.65, 0.5, 0.6), 0.6);
+addArbor(makeGear({ teeth: 12, innerR: 0.55, outerR: 0.7, holeR: 0.14, thickness: 0.11, color: steel, metalness: 0.85, roughness: 0.28 }), new THREE.Vector3(-0.65, -0.15, 0.75), 0.42);
+
+/* =========================================================
+   LAYER 4 — CASEBACK (atelier). Engraved plate.
+   ========================================================= */
+const casebackGroup = new THREE.Group();
+casebackGroup.position.z = STOPS[4].z - 1.2;
+const casebackPlate = new THREE.Mesh(
+  new THREE.CircleGeometry(2.7, 64),
+  new THREE.MeshPhysicalMaterial({ color: 0x22262b, metalness: 0.7, roughness: 0.4, clearcoat: 0.4 })
+);
+casebackGroup.add(casebackPlate);
+for (let i = 1; i <= 3; i++) {
+  const groove = new THREE.Mesh(
+    new THREE.TorusGeometry(0.6 * i, 0.012, 8, 64),
+    new THREE.MeshPhysicalMaterial({ color: brass, metalness: 0.8, roughness: 0.35 })
+  );
+  casebackGroup.add(groove);
+}
+scene.add(casebackGroup);
+
+/* ---------- ambient dust particles across the whole depth ---------- */
+const particleCount = reduceMotion ? 0 : isMobile ? 110 : 220;
+let particles = null;
+if (particleCount) {
+  const pGeo = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * 14;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+    positions[i * 3 + 2] = 6 - Math.random() * 24;
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const pMat = new THREE.PointsMaterial({ color: 0xc89b5c, size: 0.02, transparent: true, opacity: 0.3 });
+  particles = new THREE.Points(pGeo, pMat);
+  scene.add(particles);
+}
+
+/* ---------- warm glow cloud around the hero title ---------- */
+function makeGlowTexture() {
+  const size = 128;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  grad.addColorStop(0, 'rgba(255,235,200,1)');
+  grad.addColorStop(0.4, 'rgba(200,155,92,0.55)');
+  grad.addColorStop(1, 'rgba(200,155,92,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+const glowCount = reduceMotion ? 0 : isMobile ? 110 : 260;
+let glowCloud = null;
+if (glowCount) {
+  const gGeo = new THREE.BufferGeometry();
+  const gPos = new Float32Array(glowCount * 3);
+  for (let i = 0; i < glowCount; i++) {
+    const r = Math.pow(Math.random(), 0.5) * 2.4;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 2 - 1);
+    gPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+    gPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.6;
+    gPos[i * 3 + 2] = STOPS[0].z - 1 + r * Math.cos(phi) * 0.5;
+  }
+  gGeo.setAttribute('position', new THREE.BufferAttribute(gPos, 3));
+  const gMat = new THREE.PointsMaterial({ size: 0.15, map: makeGlowTexture(), transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, color: brass });
+  glowCloud = new THREE.Points(gGeo, gMat);
+  scene.add(glowCloud);
+}
+
+/* =========================================================
+   SCROLL ORCHESTRATION — one progress value drives everything:
+   camera depth, panel opacity, layer visibility, sub-progress
+   for the collection carousel.
+   ========================================================= */
+let sceneProgress = 0;
+const panels = Array.from(document.querySelectorAll('.panel'));
+const stopDots = Array.from(document.querySelectorAll('.stop-dot'));
+const navButtons = Array.from(document.querySelectorAll('.nav-links button'));
+const sceneTrack = document.getElementById('scene-track');
+const progressBar = document.getElementById('progress-bar');
+
+function smoothWindow(p, start, end, fade) {
+  // 0 -> 1 -> 0 trapezoid across [start,end] with fade-in/out margins
+  if (p < start - fade || p > end + fade) return 0;
+  if (p < start) return (p - (start - fade)) / fade;
+  if (p > end) return 1 - (p - end) / fade;
+  return 1;
+}
+
+function updateScene(progress) {
+  sceneProgress = progress;
+
+  // camera z: piecewise-linear across stop anchors, weighted by RANGES
+  let camZ = STOPS[0].z;
+  for (let i = 0; i < RANGES.length; i++) {
+    const [s, e] = RANGES[i];
+    const mid = (s + e) / 2;
+    if (i === 0 && progress <= mid) { camZ = STOPS[0].z; break; }
+    const nextMid = i < RANGES.length - 1 ? (RANGES[i + 1][0] + RANGES[i + 1][1]) / 2 : mid;
+    if (progress >= mid && progress <= nextMid) {
+      const t = (progress - mid) / (nextMid - mid || 1);
+      camZ = THREE.MathUtils.lerp(STOPS[i].z, STOPS[Math.min(i + 1, STOPS.length - 1)].z, t);
+      break;
+    }
+    if (i === RANGES.length - 1) camZ = STOPS[i].z;
+  }
+  camera.position.z = camZ;
+
+  // panels: fade per range with small overlap
+  panels.forEach((panel, i) => {
+    const [s, e] = RANGES[i];
+    const w = smoothWindow(progress, s, e, 0.035);
+    panel.style.opacity = w.toFixed(3);
+    panel.classList.toggle('is-interactive', w > 0.55);
+  });
+
+  // nav + dots active state
+  const activeIdx = RANGES.findIndex(([s, e]) => progress >= s && progress <= e);
+  stopDots.forEach((d, i) => d.classList.toggle('is-active', i === activeIdx));
+  navButtons.forEach((b) => b.classList.toggle('is-active', parseInt(b.dataset.goto, 10) === activeIdx));
+
+  // layer opacities: fade each 3D layer in/out around its own stop
+  const layerWindow = (i) => smoothWindow(progress, RANGES[i][0], RANGES[i][1], 0.06);
+  crystalMat.opacity = 0.18 * layerWindow(0);
+  dialGroup.children.forEach((c) => { if (c.material) c.material.opacity = layerWindow(1); c.visible = layerWindow(1) > 0.01; });
+  dialFace.material.transparent = true;
+  handsGroup.visible = layerWindow(2) > 0.01;
+  handsGroup.children.forEach((h) => { h.material.transparent = true; h.material.opacity = layerWindow(2); });
+  movementGroup.visible = layerWindow(3) > 0.01;
+  arbors.forEach(({ mesh }) => {
+    mesh.traverse((n) => { if (n.material) { n.material.transparent = true; n.material.opacity = layerWindow(3); } });
+  });
+  casebackGroup.visible = layerWindow(4) > 0.01;
+  casebackGroup.children.forEach((c) => { c.material.transparent = true; c.material.opacity = layerWindow(4); });
+  if (glowCloud) glowCloud.material.opacity = 0.5 * layerWindow(0);
+
+  // collection sub-progress: which product is in focus (0,1,2)
+  const [cs, ce] = RANGES[2];
+  const collT = THREE.MathUtils.clamp((progress - cs) / (ce - cs || 1), 0, 1);
+  const idx = Math.min(2, Math.floor(collT * 3));
+  document.querySelectorAll('.coll-item').forEach((el) => el.classList.toggle('is-active', parseInt(el.dataset.idx, 10) === idx));
+  document.querySelectorAll('.coll-progress span').forEach((el) => el.classList.toggle('is-active', parseInt(el.dataset.p, 10) === idx));
+
+  if (progressBar) progressBar.style.width = (progress * 100).toFixed(1) + '%';
+}
+updateScene(0);
+
+function computeProgress() {
+  const rect = sceneTrack.getBoundingClientRect();
+  const total = sceneTrack.offsetHeight - window.innerHeight;
+  const scrolled = -rect.top;
+  return THREE.MathUtils.clamp(scrolled / (total || 1), 0, 1);
+}
+
+let ticking = false;
+window.addEventListener('scroll', () => {
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      updateScene(computeProgress());
+      ticking = false;
+    });
+    ticking = true;
+  }
+}, { passive: true });
+
+/* click-to-navigate: dots, nav links, hero CTAs */
+function goToStop(idx) {
+  const [s, e] = RANGES[idx];
+  const target = (s + e) / 2;
+  const total = sceneTrack.offsetHeight - window.innerHeight;
+  const y = sceneTrack.offsetTop + target * total;
+  window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+document.querySelectorAll('[data-goto]').forEach((el) => {
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
+    goToStop(parseInt(el.dataset.goto, 10));
+  });
+});
+
+/* ---------- pointer parallax ---------- */
+const pointer = { x: 0, y: 0 };
+const pointerTarget = { x: 0, y: 0 };
+window.addEventListener('pointermove', (e) => {
+  pointerTarget.x = (e.clientX / window.innerWidth - 0.5) * 2;
+  pointerTarget.y = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+/* ---------- render loop ---------- */
+const clock = new THREE.Clock();
+function damp(current, target, lambda, dt) {
+  return THREE.MathUtils.damp(current, target, lambda, dt);
+}
+
+function animate() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+
+  pointer.x = damp(pointer.x, pointerTarget.x, 4, dt);
+  pointer.y = damp(pointer.y, pointerTarget.y, 4, dt);
+
+  if (!reduceMotion) {
+    arbors.forEach(({ mesh, spinSpeed }) => { mesh.rotation.z += spinSpeed * dt; });
+    dialGroup.rotation.z += dt * 0.01;
+    hourHand.rotation.z -= dt * 0.05;
+    minuteHand.rotation.z -= dt * 0.09;
+    if (particles) particles.rotation.y += dt * 0.01;
+    if (glowCloud) { glowCloud.rotation.y += dt * 0.04; glowCloud.rotation.x += dt * 0.012; }
+  }
+
+  camera.position.x = damp(camera.position.x, pointer.x * 0.5, 3, dt);
+  camera.rotation.y = damp(camera.rotation.y, -pointer.x * 0.035, 3, dt);
+  camera.lookAt(0, 0, camera.position.z - 5);
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* =========================================================
+   Magnetic CTA
+   ========================================================= */
+document.querySelectorAll('.cta-magnetic').forEach((el) => {
+  let bounds = el.getBoundingClientRect();
+  window.addEventListener('resize', () => (bounds = el.getBoundingClientRect()));
+  el.addEventListener('mousemove', (e) => {
+    bounds = el.getBoundingClientRect();
+    const relX = e.clientX - (bounds.left + bounds.width / 2);
+    const relY = e.clientY - (bounds.top + bounds.height / 2);
+    if (window.gsap) gsap.to(el, { x: relX * 0.4, y: relY * 0.4, duration: 0.5, ease: 'power3.out' });
+  });
+  el.addEventListener('mouseleave', () => {
+    if (window.gsap) gsap.to(el, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.4)' });
+  });
+});
+
+/* =========================================================
+   Preloader + split-text hero reveal
+   ========================================================= */
+function splitHeroTitle() {
+  const el = document.getElementById('hero-title');
+  if (!el) return;
+  const walk = (node) => {
+    [...node.childNodes].forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const frag = document.createDocumentFragment();
+        [...child.textContent].forEach((ch) => {
+          const span = document.createElement('span');
+          span.className = 'char';
+          span.textContent = ch === ' ' ? '\u00A0' : ch;
+          frag.appendChild(span);
+        });
+        child.replaceWith(frag);
+      } else walk(child);
+    });
+  };
+  walk(el);
+}
+splitHeroTitle();
+
+function revealHero() {
+  if (!window.gsap) return;
+  gsap.from('nav', { opacity: 0, y: -12, duration: 1, ease: 'power2.out' });
+  gsap.from('#panel-hero .eyebrow, #panel-hero .hero-sub, .depth-cue', { opacity: 0, y: 18, duration: 1.1, stagger: 0.12, ease: 'power3.out' });
+  gsap.from('#hero-title .char', { opacity: 0, y: '110%', rotate: 4, duration: 1, stagger: 0.018, ease: 'power4.out', delay: 0.1 });
+  gsap.from('.hero-cta a', { opacity: 0, y: 14, duration: 0.9, stagger: 0.1, delay: 0.7, ease: 'power3.out' });
+  gsap.from('.hero-stats .stat', { opacity: 0, y: 14, duration: 0.9, stagger: 0.1, delay: 0.9, ease: 'power3.out' });
+
+  document.querySelectorAll('.stat-num').forEach((el) => {
+    const raw = el.textContent.trim();
+    const match = raw.match(/^(\d+)(.*)$/);
+    if (!match) return;
+    const target = parseInt(match[1], 10);
+    const suffix = match[2];
+    const counter = { v: 0 };
+    gsap.to(counter, { v: target, duration: 1.3, delay: 1, ease: 'power2.out', onUpdate: () => { el.textContent = Math.round(counter.v) + suffix; } });
+  });
+}
+
+const preloader = document.getElementById('preloader');
+const preloaderFill = document.querySelector('.preloader-fill');
+const preloaderPct = document.querySelector('.preloader-pct');
+if (window.gsap && preloader) {
+  const counter = { v: 0 };
+  gsap.to(counter, {
+    v: 100,
+    duration: reduceMotion ? 0.4 : 1.6,
+    ease: 'power2.inOut',
+    onUpdate: () => {
+      const pct = Math.round(counter.v);
+      if (preloaderFill) preloaderFill.style.width = pct + '%';
+      if (preloaderPct) preloaderPct.textContent = String(pct).padStart(2, '0');
+    },
+    onComplete: () => {
+      gsap.to(preloader, {
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power2.out',
+        onComplete: () => { preloader.style.display = 'none'; revealHero(); },
+      });
+    },
+  });
+} else {
+  if (preloader) preloader.style.display = 'none';
+  revealHero();
+}
+
+/* ---------- custom cursor ---------- */
+if (window.gsap && !window.matchMedia('(hover:none), (pointer:coarse)').matches) {
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  const dotX = gsap.quickTo(dot, 'x', { duration: 0.08, ease: 'power3.out' });
+  const dotY = gsap.quickTo(dot, 'y', { duration: 0.08, ease: 'power3.out' });
+  const ringX = gsap.quickTo(ring, 'x', { duration: 0.35, ease: 'power3.out' });
+  const ringY = gsap.quickTo(ring, 'y', { duration: 0.35, ease: 'power3.out' });
+  window.addEventListener('mousemove', (e) => { dotX(e.clientX); dotY(e.clientY); ringX(e.clientX); ringY(e.clientY); });
+  document.querySelectorAll('a, button, .coll-item').forEach((el) => {
+    el.addEventListener('mouseenter', () => ring.classList.add('is-active'));
+    el.addEventListener('mouseleave', () => ring.classList.remove('is-active'));
+  });
+}
+
+/* ---------- live seconds hand on the collection dials ---------- */
+if (!reduceMotion) {
+  const secHands = document.querySelectorAll('.hand-sec');
+  function tickSeconds() {
+    const angle = ((Date.now() / 1000) % 60) * 6;
+    secHands.forEach((h) => { h.style.height = '38%'; h.style.width = '1px'; h.style.transform = `rotate(${angle}deg)`; });
+    requestAnimationFrame(tickSeconds);
+  }
+  tickSeconds();
+}
+
+window.__arborReady = true;
+
+</script>
+
+</body>
+</html>
