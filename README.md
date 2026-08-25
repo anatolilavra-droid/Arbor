@@ -6,7 +6,7 @@
 
 A premium, awwwards-style landing page for **ARBOR**, a fictional Geneva skeleton-watch manufacture — built as a design/front-end showcase piece.
 
-**Live:** https://anatolilavra-droid.github.io/arbor/
+**Live:** https://anatolilavra-droid.github.io/Arbor/
 
 ![ARBOR hero section](docs/preview.png)
 
