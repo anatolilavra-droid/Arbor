@@ -20,6 +20,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
@@ -30,3 +32,37 @@ jobs:
           path: .
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  screenshot:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: |
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Screenshot the live site
+        env:
+          PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+        run: |
+          node -e "
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch();
+            for (const [label, viewport] of [['desktop', {width:1440,height:900}], ['mobile', {width:390,height:844}]]) {
+              const page = await browser.newPage({ viewport });
+              await page.goto(process.env.PAGE_URL, { waitUntil: 'networkidle', timeout: 45000 });
+              await page.waitForTimeout(1200);
+              await page.screenshot({ path: \`live-\${label}.png\`, fullPage: true });
+            }
+            await browser.close();
+          })();
+          "
+      - uses: actions/upload-artifact@v4
+        with:
+          name: live-screenshots
+          path: live-*.png
+          retention-days: 30
