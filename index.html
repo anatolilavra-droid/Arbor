@@ -446,6 +446,16 @@ scene.add(fill);
 /* =========================================================
    DEPTH ANCHORS — five stops the camera glides between.
    These map 1:1 to the five .panel elements in the DOM.
+
+   IMPORTANT: STOPS[i].z is the CAMERA's z at each stop, not a
+   content position. Every 3D layer group must be placed at
+   STOPS[i].z MINUS a standoff distance (see each "const xGroup"
+   below) so the camera is actually looking AT the geometry from
+   in front of it, rather than sitting inside/behind it. A group
+   placed at exactly STOPS[i].z puts the camera in the same spot
+   as the mesh -- well inside the 0.1 near-clipping plane -- so
+   the layer renders as nothing (or an indistinct near-clipped
+   blur), regardless of GPU vs. software rendering.
    ========================================================= */
 const STOPS = [
   { z: 4.0,  label: 'crystal'   }, // hero
@@ -548,7 +558,7 @@ scene.add(crystalGroup);
    LAYER 1 — DIAL (manifesto). Dark disc + hour markers.
    ========================================================= */
 const dialGroup = new THREE.Group();
-dialGroup.position.z = STOPS[1].z;
+dialGroup.position.z = STOPS[1].z - 1.8;
 const dialFace = new THREE.Mesh(
   new THREE.CircleGeometry(2.9, 64),
   new THREE.MeshPhysicalMaterial({ color: 0x14171b, metalness: 0.3, roughness: 0.6, clearcoat: 0.3 })
@@ -571,7 +581,7 @@ scene.add(dialGroup);
    hands, ambient life behind the product copy.
    ========================================================= */
 const handsGroup = new THREE.Group();
-handsGroup.position.z = STOPS[2].z;
+handsGroup.position.z = STOPS[2].z - 3.0;
 const hourHand = new THREE.Mesh(
   new THREE.BoxGeometry(0.12, 1.5, 0.06),
   new THREE.MeshPhysicalMaterial({ color: brass, metalness: 0.9, roughness: 0.2, clearcoat: 0.6 })
@@ -589,7 +599,7 @@ scene.add(handsGroup);
    LAYER 3 — MOVEMENT (craft). The gear train, assembled.
    ========================================================= */
 const movementGroup = new THREE.Group();
-movementGroup.position.z = STOPS[3].z;
+movementGroup.position.z = STOPS[3].z - 4.0;
 scene.add(movementGroup);
 
 const arbors = [];
